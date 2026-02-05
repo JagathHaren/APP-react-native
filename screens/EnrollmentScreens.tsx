@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { Package } from '../types';
 
 const PACKAGES: Package[] = [
@@ -11,28 +12,22 @@ const PACKAGES: Package[] = [
 ];
 
 export const EnrollDecisionScreen: React.FC<{onYes: () => void; onNo: () => void}> = ({ onYes, onNo }) => (
-  <div className="flex flex-col items-center justify-center h-full p-8 bg-black text-white">
-    <div className="w-24 h-24 bg-red-600 rounded-3xl flex items-center justify-center mb-10 rotate-12 shadow-2xl shadow-red-600/20">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-    </div>
-    <h2 className="text-4xl font-black text-center mb-4 tracking-tighter italic">START YOUR PROGRAM?</h2>
-    <p className="text-gray-500 text-center mb-12 font-medium">Join the thousands of women transforming their lives with our proven methodology.</p>
+  <View style={styles.centerContainer}>
+    <View style={styles.iconCircle}>
+      <Text style={styles.iconEmoji}>⚡</Text>
+    </View>
+    <Text style={styles.title}>START YOUR PROGRAM?</Text>
+    <Text style={styles.description}>Join the thousands of women transforming their lives with our proven methodology.</Text>
     
-    <div className="flex flex-col gap-4 w-full">
-      <button 
-        onClick={onYes}
-        className="bg-white text-black py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
-      >
-        I'M READY
-      </button>
-      <button 
-        onClick={onNo}
-        className="bg-transparent text-gray-500 py-4 rounded-xl font-bold uppercase tracking-widest active:scale-95 transition-all"
-      >
-        LATER
-      </button>
-    </div>
-  </div>
+    <View style={styles.buttonGroup}>
+      <TouchableOpacity style={styles.primaryBtn} onPress={onYes}>
+        <Text style={styles.primaryBtnText}>I'M READY</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.secondaryBtn} onPress={onNo}>
+        <Text style={styles.secondaryBtnText}>LATER</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
 );
 
 export const PackageSelectionScreen: React.FC<{onComplete: (pkgs: Package[]) => void}> = ({ onComplete }) => {
@@ -53,79 +48,71 @@ export const PackageSelectionScreen: React.FC<{onComplete: (pkgs: Package[]) => 
     }
   };
 
+  const totalPrice = selectedIds.reduce((sum, id) => sum + (PACKAGES.find(p => p.id === id)?.price || 0), 0);
+
   return (
-    <div className="flex flex-col h-full bg-black text-white relative">
-      <div className="p-6 bg-black border-b border-gray-900 sticky top-0 z-10">
-        <h2 className="text-2xl font-black italic tracking-tighter uppercase">CHOOSE YOUR PATH</h2>
-      </div>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>CHOOSE YOUR PATH</Text>
+      </View>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
-        <section>
-          <h3 className="text-xs font-black text-red-600 mb-6 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-8 h-[2px] bg-red-600"></span> FITNESS SQUAD
-          </h3>
-          <div className="space-y-4">
-            {PACKAGES.filter(p => p.category === 'fitness').map(pkg => (
-              <div 
-                key={pkg.id}
-                onClick={() => togglePackage(pkg.id)}
-                className={`p-6 rounded-3xl border transition-all cursor-pointer ${selectedIds.includes(pkg.id) ? 'border-red-600 bg-red-600/10' : 'border-gray-900 bg-gray-900/50'}`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h4 className="font-black text-white uppercase italic tracking-tight">{pkg.name}</h4>
-                  <span className="text-red-500 font-black italic text-lg">${pkg.price}</span>
-                </div>
-                <p className="text-xs text-gray-500 font-medium leading-relaxed">{pkg.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <ScrollView contentContainerStyle={styles.scrollPadding}>
+        <Text style={styles.sectionLabel}>FITNESS SQUADS</Text>
+        {PACKAGES.filter(p => p.category === 'fitness').map(pkg => (
+          <TouchableOpacity 
+            key={pkg.id} 
+            style={[styles.pkgCard, selectedIds.includes(pkg.id) && styles.pkgCardSelected]} 
+            onPress={() => togglePackage(pkg.id)}
+          >
+            <View style={styles.pkgHeader}>
+              <Text style={styles.pkgTitle}>{pkg.name.toUpperCase()}</Text>
+              <Text style={styles.pkgPrice}>${pkg.price}</Text>
+            </View>
+            <Text style={styles.pkgDesc}>{pkg.description}</Text>
+          </TouchableOpacity>
+        ))}
 
-        <section>
-          <h3 className="text-xs font-black text-white mb-6 uppercase tracking-widest flex items-center gap-2 opacity-50">
-            <span className="w-8 h-[2px] bg-white"></span> FUEL & NUTRITION
-          </h3>
-          <div className="space-y-4">
-            {PACKAGES.filter(p => p.category === 'nutrition').map(pkg => (
-              <div 
-                key={pkg.id}
-                onClick={() => togglePackage(pkg.id)}
-                className={`p-6 rounded-3xl border transition-all cursor-pointer ${selectedIds.includes(pkg.id) ? 'border-white bg-white/5' : 'border-gray-900 bg-gray-900/50'}`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h4 className="font-black text-white uppercase italic tracking-tight">{pkg.name}</h4>
-                  <span className="text-white font-black italic text-lg">${pkg.price}</span>
-                </div>
-                <p className="text-xs text-gray-500 font-medium leading-relaxed">{pkg.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+        <Text style={[styles.sectionLabel, { marginTop: 32 }]}>NUTRITION PLANS</Text>
+        {PACKAGES.filter(p => p.category === 'nutrition').map(pkg => (
+          <TouchableOpacity 
+            key={pkg.id} 
+            style={[styles.pkgCard, selectedIds.includes(pkg.id) && styles.pkgCardSelected]} 
+            onPress={() => togglePackage(pkg.id)}
+          >
+            <View style={styles.pkgHeader}>
+              <Text style={styles.pkgTitle}>{pkg.name.toUpperCase()}</Text>
+              <Text style={styles.pkgPrice}>${pkg.price}</Text>
+            </View>
+            <Text style={styles.pkgDesc}>{pkg.description}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-      <div className="p-6 bg-black border-t border-gray-900">
-        <button 
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.primaryBtn, selectedIds.length === 0 && { opacity: 0.3 }]} 
           disabled={selectedIds.length === 0}
-          onClick={handleNext}
-          className="w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-30 active:scale-95 transition-all"
+          onPress={handleNext}
         >
-          CONTINUE (${selectedIds.reduce((sum, id) => sum + (PACKAGES.find(p => p.id === id)?.price || 0), 0)})
-        </button>
-      </div>
+          <Text style={styles.primaryBtnText}>CONTINUE (${totalPrice})</Text>
+        </TouchableOpacity>
+      </View>
 
-      {showUpsell && (
-        <div className="absolute inset-0 bg-black/95 z-50 flex items-center justify-center p-6">
-          <div className="bg-gray-900 border border-red-600/30 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
-            <h3 className="text-3xl font-black text-white mb-4 italic tracking-tighter uppercase">FUEL YOUR BODY?</h3>
-            <p className="text-gray-400 mb-8 text-sm font-medium">Combining training with professional nutrition coaching increases results by up to 300%.</p>
-            <div className="flex flex-col gap-3">
-              <button onClick={() => setShowUpsell(false)} className="w-full bg-red-600 text-white py-5 rounded-xl font-black uppercase">ADD NUTRITION</button>
-              <button onClick={() => onComplete(PACKAGES.filter(p => selectedIds.includes(p.id)))} className="w-full py-4 text-gray-600 font-black uppercase text-xs tracking-widest">NO THANKS</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <Modal visible={showUpsell} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>FUEL YOUR BODY?</Text>
+            <Text style={styles.modalDesc}>Combining training with professional nutrition coaching increases results by up to 300%.</Text>
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => setShowUpsell(false)}>
+              <Text style={styles.primaryBtnText}>ADD NUTRITION</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => onComplete(PACKAGES.filter(p => selectedIds.includes(p.id)))}>
+              <Text style={styles.secondaryBtnText}>NO THANKS, JUST TRAINING</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
@@ -133,47 +120,83 @@ export const PaymentScreen: React.FC<{onComplete: () => void}> = ({ onComplete }
   const [method, setMethod] = useState<'upi' | 'bank' | null>(null);
   const [paid, setPaid] = useState(false);
 
-  const handlePay = () => {
-    setPaid(true);
-  };
-
   if (paid) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-black">
-        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mb-10 animate-bounce shadow-2xl shadow-red-600/30">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-        </div>
-        <h2 className="text-4xl font-black text-white mb-4 tracking-tighter italic uppercase">ENROLLED!</h2>
-        <p className="text-gray-500 mb-12 font-medium">Welcome to the inner circle. Your journey to peak performance starts now.</p>
-        <button onClick={onComplete} className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-widest shadow-2xl">LET'S TRAIN</button>
-      </div>
+      <View style={styles.centerContainer}>
+        <View style={[styles.iconCircle, { backgroundColor: '#dc2626' }]}>
+          <Text style={styles.iconEmoji}>✅</Text>
+        </View>
+        <Text style={styles.title}>ENROLLED!</Text>
+        <Text style={styles.description}>Welcome to the inner circle. Your journey starts now.</Text>
+        <TouchableOpacity style={styles.primaryBtn} onPress={onComplete}>
+          <Text style={styles.primaryBtnText}>LET'S TRAIN</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-black text-white p-6">
-      <h2 className="text-2xl font-black mb-10 italic uppercase tracking-tighter">SECURE CHECKOUT</h2>
-      <div className="space-y-4 mb-10">
-        <label className={`flex items-center p-6 rounded-3xl border-2 transition-all cursor-pointer ${method === 'upi' ? 'border-red-600 bg-red-600/5' : 'border-gray-900 bg-gray-900/30'}`} onClick={() => setMethod('upi')}>
-          <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center ${method === 'upi' ? 'border-red-600' : 'border-gray-800'}`}>
-            {method === 'upi' && <div className="w-3 h-3 bg-red-600 rounded-full" />}
-          </div>
-          <div className="flex-1">
-            <p className="font-black uppercase italic text-sm tracking-tight">UPI FAST PAY</p>
-            <p className="text-[10px] text-gray-500 font-bold">G-Pay, PhonePe, Paytm</p>
-          </div>
-        </label>
-        <label className={`flex items-center p-6 rounded-3xl border-2 transition-all cursor-pointer ${method === 'bank' ? 'border-red-600 bg-red-600/5' : 'border-gray-900 bg-gray-900/30'}`} onClick={() => setMethod('bank')}>
-          <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center ${method === 'bank' ? 'border-red-600' : 'border-gray-800'}`}>
-            {method === 'bank' && <div className="w-3 h-3 bg-red-600 rounded-full" />}
-          </div>
-          <div className="flex-1">
-            <p className="font-black uppercase italic text-sm tracking-tight">BANK TRANSFER</p>
-            <p className="text-[10px] text-gray-500 font-bold">IMPS / NEFT Transfer</p>
-          </div>
-        </label>
-      </div>
-      <button disabled={!method} onClick={handlePay} className="w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-30 mt-auto">PAY NOW</button>
-    </div>
+    <View style={styles.container}>
+      <Text style={[styles.title, { padding: 24, marginTop: 40 }]}>SECURE CHECKOUT</Text>
+      <View style={styles.scrollPadding}>
+        <TouchableOpacity 
+          style={[styles.methodCard, method === 'upi' && styles.methodSelected]} 
+          onPress={() => setMethod('upi')}
+        >
+          <Text style={styles.methodTitle}>UPI FAST PAY</Text>
+          <Text style={styles.methodSub}>Google Pay, PhonePe, Paytm</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.methodCard, method === 'bank' && styles.methodSelected]} 
+          onPress={() => setMethod('bank')}
+        >
+          <Text style={styles.methodTitle}>BANK TRANSFER</Text>
+          <Text style={styles.methodSub}>Direct IMPS / NEFT</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.primaryBtn, !method && { opacity: 0.3 }]} 
+          disabled={!method}
+          onPress={() => setPaid(true)}
+        >
+          <Text style={styles.primaryBtnText}>PAY NOW</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0d0d0d' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, backgroundColor: '#000' },
+  iconCircle: { width: 100, height: 100, backgroundColor: '#dc2626', borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 40 },
+  iconEmoji: { fontSize: 40 },
+  title: { color: '#fff', fontSize: 28, fontWeight: '900', fontStyle: 'italic', textAlign: 'center' },
+  description: { color: '#666', textAlign: 'center', marginVertical: 20, lineHeight: 22 },
+  buttonGroup: { width: '100%', gap: 12 },
+  primaryBtn: { backgroundColor: '#fff', padding: 20, borderRadius: 16, alignItems: 'center', width: '100%' },
+  primaryBtnText: { color: '#000', fontWeight: '900', letterSpacing: 1 },
+  secondaryBtn: { padding: 16, alignItems: 'center' },
+  secondaryBtnText: { color: '#666', fontWeight: '800' },
+  header: { padding: 24, borderBottomWidth: 1, borderBottomColor: '#222' },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '900', fontStyle: 'italic' },
+  scrollPadding: { padding: 24 },
+  sectionLabel: { color: '#dc2626', fontWeight: '900', fontSize: 10, letterSpacing: 2, marginBottom: 16 },
+  pkgCard: { backgroundColor: '#111', padding: 20, borderRadius: 24, marginBottom: 12, borderWidth: 1, borderColor: '#222' },
+  pkgCardSelected: { borderColor: '#dc2626', backgroundColor: '#dc262610' },
+  pkgHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  pkgTitle: { color: '#fff', fontWeight: '900', fontStyle: 'italic' },
+  pkgPrice: { color: '#dc2626', fontWeight: '900' },
+  pkgDesc: { color: '#555', fontSize: 12, lineHeight: 18 },
+  footer: { padding: 24, borderTopWidth: 1, borderTopColor: '#222' },
+  modalOverlay: { flex: 1, backgroundColor: '#000000f0', justifyContent: 'center', padding: 32 },
+  modalBox: { backgroundColor: '#111', padding: 32, borderRadius: 32, alignItems: 'center', borderWidth: 1, borderColor: '#222' },
+  modalTitle: { color: '#fff', fontSize: 24, fontWeight: '900', fontStyle: 'italic', marginBottom: 16 },
+  modalDesc: { color: '#666', textAlign: 'center', marginBottom: 32, lineHeight: 20 },
+  methodCard: { backgroundColor: '#111', padding: 24, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: '#222' },
+  methodSelected: { borderColor: '#dc2626', backgroundColor: '#dc262610' },
+  methodTitle: { color: '#fff', fontWeight: '900', fontStyle: 'italic', fontSize: 14 },
+  methodSub: { color: '#444', fontSize: 10, marginTop: 4, fontWeight: '700' }
+});
