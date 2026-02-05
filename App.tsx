@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, SafeAreaView, StatusBar } from 'react-native';
+import { StyleSheet, View, StatusBar } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AppScreen, User, Package, FoodLog, MoodLog, WaterLog, PeriodEntry } from './types';
 import SplashScreen from './screens/SplashScreen';
 import { LoginScreen, SignupScreen, TrainerLoginScreen } from './screens/AuthScreens';
@@ -80,12 +81,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.innerContainer}>
-        {renderScreen()}
-      </View>
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.innerContainer}>
+          {renderScreen()}
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

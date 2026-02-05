@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Package } from '../types';
 
 interface AttendanceProps {
@@ -13,85 +14,95 @@ const AttendanceCalendar: React.FC<AttendanceProps> = ({ enrolledPackages, atten
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d0d] text-white">
-      <header className="p-4 bg-[#0d0d0d] border-b border-gray-900 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 text-red-600">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          </button>
-          <h2 className="text-xl font-black italic tracking-tighter">ATTENDANCE</h2>
-        </div>
-        <button onClick={onBack} className="text-gray-500 hover:text-white transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-        </button>
-      </header>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>ATTENDANCE</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6">
-        <div className="grid grid-cols-1 gap-4 mb-10">
-          {enrolledPackages.length > 0 ? enrolledPackages.map(pkg => (
-            <div key={pkg.id} className="bg-gray-900 border border-gray-800 p-6 rounded-3xl relative overflow-hidden group">
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-red-600/5 rounded-full group-hover:bg-red-600/10 transition-colors"></div>
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h4 className="font-black text-white uppercase italic text-lg tracking-tight">{pkg.name}</h4>
-                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 italic">Squad: Verified</p>
-                </div>
-                <div className="bg-red-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter">PRO</div>
-              </div>
-              <div className="flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/5 backdrop-blur-sm">
-                <div className="text-center flex-1 border-r border-white/5">
-                  <p className="text-[9px] text-gray-500 font-black uppercase mb-1">Started</p>
-                  <p className="font-black text-xs text-gray-300">MAY 01</p>
-                </div>
-                <div className="text-center flex-1">
-                  <p className="text-[9px] text-gray-500 font-black uppercase mb-1">Expires</p>
-                  <p className="font-black text-xs text-red-600">JUN 01</p>
-                </div>
-              </div>
-            </div>
-          )) : (
-            <div className="p-10 text-center bg-gray-900/50 border border-dashed border-gray-800 rounded-3xl">
-              <p className="text-gray-600 font-bold text-xs uppercase italic">No battle plans enrolled.</p>
-            </div>
-          )}
-        </div>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {enrolledPackages.map(pkg => (
+          <View key={pkg.id} style={styles.pkgCard}>
+            <View style={styles.pkgTop}>
+              <Text style={styles.pkgName}>{pkg.name.toUpperCase()}</Text>
+              <View style={styles.proTag}><Text style={styles.proTagText}>PRO</Text></View>
+            </View>
+            <View style={styles.pkgStats}>
+              <View style={styles.stat}>
+                <Text style={styles.statHint}>STARTED</Text>
+                <Text style={styles.statVal}>MAY 01</Text>
+              </View>
+              <View style={styles.stat}>
+                <Text style={styles.statHint}>EXPIRES</Text>
+                <Text style={[styles.statVal, { color: '#dc2626' }]}>JUN 01</Text>
+              </View>
+            </View>
+          </View>
+        ))}
 
-        <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl relative">
-          <div className="flex justify-between items-center mb-8 px-2">
-            <h4 className="font-black text-white italic tracking-tight uppercase">May Combat Log</h4>
-            <div className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Mark Sessions</div>
-          </div>
-          
-          <div className="grid grid-cols-7 gap-3 text-center">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className="text-[10px] font-black text-gray-700 uppercase mb-2">{d}</span>)}
-            {days.map(d => (
-              <button 
-                key={d} 
-                onClick={() => onToggleAttendance(d)}
-                className={`h-11 flex items-center justify-center rounded-xl text-xs font-black transition-all duration-300
-                  ${attendedDays.includes(d) 
-                    ? 'bg-red-600 text-white shadow-xl shadow-red-600/40 border-transparent' 
-                    : 'text-gray-700 bg-black border border-gray-800 hover:border-red-600/30'}
-                `}
-              >
-                {d}
-              </button>
+        <View style={styles.calCard}>
+          <Text style={styles.calTitle}>MAY COMBAT LOG</Text>
+          <View style={styles.grid}>
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+              <Text key={d} style={styles.dayHeader}>{d}</Text>
             ))}
-          </div>
+            {days.map(d => (
+              <TouchableOpacity 
+                key={d} 
+                onPress={() => onToggleAttendance(d)}
+                style={[styles.day, attendedDays.includes(d) && styles.dayActive]}
+              >
+                <Text style={[styles.dayText, attendedDays.includes(d) && styles.dayTextActive]}>{d}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-          <div className="mt-10 p-5 bg-white text-black rounded-2xl flex justify-between items-center shadow-2xl">
-            <div>
-              <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Total Count</span>
-              <p className="text-3xl font-black italic tracking-tighter uppercase">{attendedDays.length} SESSIONS</p>
-            </div>
-            <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-600/20 rotate-3 group-hover:rotate-0 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          <View style={styles.totalCard}>
+            <View>
+              <Text style={styles.totalHint}>SESSIONS</Text>
+              <Text style={styles.totalVal}>{attendedDays.length}</Text>
+            </View>
+            <View style={styles.boltIcon}>
+               <Text style={{ fontSize: 24 }}>⚡</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0d0d0d' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#222' },
+  backBtn: { padding: 10 },
+  backBtnText: { color: '#dc2626', fontSize: 24, fontWeight: 'bold' },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '900', fontStyle: 'italic' },
+  scrollContent: { padding: 20 },
+  pkgCard: { backgroundColor: '#111', padding: 24, borderRadius: 24, marginBottom: 20, borderWidth: 1, borderColor: '#222' },
+  pkgTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  pkgName: { color: '#fff', fontSize: 16, fontWeight: '900', fontStyle: 'italic' },
+  proTag: { backgroundColor: '#dc2626', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  proTagText: { color: '#fff', fontSize: 8, fontWeight: '900' },
+  pkgStats: { flexDirection: 'row', backgroundColor: '#000', padding: 16, borderRadius: 16 },
+  stat: { flex: 1, alignItems: 'center' },
+  statHint: { color: '#666', fontSize: 8, fontWeight: '900', marginBottom: 4 },
+  statVal: { color: '#ccc', fontSize: 10, fontWeight: '900' },
+  calCard: { backgroundColor: '#111', padding: 24, borderRadius: 24, borderWidth: 1, borderColor: '#222' },
+  calTitle: { color: '#fff', fontSize: 14, fontWeight: '900', marginBottom: 24, fontStyle: 'italic' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+  dayHeader: { width: '11%', textAlign: 'center', color: '#444', fontSize: 10, fontWeight: '900', marginBottom: 10 },
+  day: { width: '11%', aspectRatio: 1, backgroundColor: '#000', borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#222' },
+  dayActive: { backgroundColor: '#dc2626', borderColor: '#dc2626' },
+  dayText: { color: '#444', fontSize: 10, fontWeight: '900' },
+  dayTextActive: { color: '#fff' },
+  totalCard: { marginTop: 32, backgroundColor: '#fff', padding: 20, borderRadius: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalHint: { color: '#999', fontSize: 8, fontWeight: '900' },
+  totalVal: { color: '#000', fontSize: 24, fontWeight: '900', fontStyle: 'italic' },
+  boltIcon: { width: 50, height: 50, backgroundColor: '#dc2626', borderRadius: 12, justifyContent: 'center', alignItems: 'center' }
+});
 
 export default AttendanceCalendar;
