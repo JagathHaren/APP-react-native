@@ -1,0 +1,8 @@
+{
+  "name": "STRONG HER - Female Fitness & Nutrition",
+  "description": "Empowering women through personalized fitness, nutrition tracking, and wellness tools.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
