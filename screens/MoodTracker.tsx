@@ -20,7 +20,7 @@ const MoodTracker: React.FC<{logs: MoodLog[]; setLogs: any; onBack: () => void}>
       rating,
       note,
       timestamp: new Date(),
-      emojis: [moods[rating-1].emoji]
+      emojis: [moods[rating-1]?.emoji || '😐']
     };
     setLogs([newLog, ...logs]);
     setNote('');
@@ -34,7 +34,8 @@ const MoodTracker: React.FC<{logs: MoodLog[]; setLogs: any; onBack: () => void}>
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>MOOD CHECK</Text>
-        <div style={{ width: 40 }} />
+        {/* Fixed: Replaced div with View */}
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -69,9 +70,9 @@ const MoodTracker: React.FC<{logs: MoodLog[]; setLogs: any; onBack: () => void}>
         {logs.map((log, i) => (
           <View key={i} style={styles.historyCard}>
             <View style={styles.historyTop}>
-              <Text style={styles.historyEmoji}>{moods[log.rating-1].emoji}</Text>
+              <Text style={styles.historyEmoji}>{moods[(log.rating || 3)-1]?.emoji || '😐'}</Text>
               <View>
-                <Text style={styles.historyLabel}>{moods[log.rating-1].label.toUpperCase()}</Text>
+                <Text style={styles.historyLabel}>{moods[(log.rating || 3)-1]?.label.toUpperCase()}</Text>
                 <Text style={styles.historyTime}>{log.timestamp.toLocaleDateString()}</Text>
               </View>
             </View>

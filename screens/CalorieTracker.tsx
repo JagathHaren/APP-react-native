@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Modal, Alert } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { FoodLog, WaterLog } from '../types';
 import { analyzeFoodImage } from '../services/geminiService';
 
@@ -16,6 +17,9 @@ const CalorieTracker: React.FC<CalorieProps> = ({ logs, setLogs, waterLogs, setW
   const [isScanning, setIsScanning] = useState(false);
   const [activeTab, setActiveTab] = useState<'log' | 'history' | 'water'>('log');
   const [foodText, setFoodText] = useState('');
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<any>(null);
 
   const totalCalories = logs.reduce((sum, log) => sum + log.calories, 0);
   const totalMacros = logs.reduce((acc, log) => ({
@@ -26,6 +30,57 @@ const CalorieTracker: React.FC<CalorieProps> = ({ logs, setLogs, waterLogs, setW
 
   const totalWater = waterLogs.reduce((sum, log) => sum + log.amount, 0);
   const goals = { cal: 2200, p: 140, c: 220, f: 60, water: 2500 };
+
+  const handleScanPress = async () => {
+    if (!permission?.granted) {
+      const { granted } = await requestPermission();
+      if (!granted) {
+        Alert.alert("Permission Required", "Allow camera access to scan your meals.");
+        return;
+      }
+    }
+    setIsCameraOpen(true);
+  };
+
+  const takePicture = async () => {
+    if (cameraRef.current && !isScanning) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.5,
+          base64: true,
+        });
+        
+        setIsCameraOpen(false);
+        setIsScanning(true);
+        
+        const result = await analyzeFoodImage(photo.base64);
+        
+        if (result && result.foodName) {
+          const newLog: FoodLog = {
+            id: Math.random().toString(),
+            name: result.foodName,
+            calories: result.calories,
+            macros: {
+              protein: result.protein,
+              carbs: result.carbs,
+              fat: result.fat
+            },
+            timestamp: new Date(),
+            unit: 'g',
+            amount: 100
+          };
+          setLogs(prev => [newLog, ...prev]);
+          Alert.alert("Logged Successfully", `Identified: ${result.foodName}`);
+        } else {
+          Alert.alert("Analysis Failed", "Could not identify food. Please try again or log manually.");
+        }
+      } catch (e) {
+        Alert.alert("Error", "Failed to capture or analyze image.");
+      } finally {
+        setIsScanning(false);
+      }
+    }
+  };
 
   const addManualFood = () => {
     if (!foodText) return;
@@ -65,6 +120,35 @@ const CalorieTracker: React.FC<CalorieProps> = ({ logs, setLogs, waterLogs, setW
 
   return (
     <View style={styles.container}>
+      {/* Loading Overlay */}
+      {isScanning && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#dc2626" />
+          <Text style={styles.loadingText}>AI ANALYZING MEAL...</Text>
+        </View>
+      )}
+
+      {/* Camera Modal */}
+      <Modal visible={isCameraOpen} animationType="slide">
+        <CameraView style={styles.camera} ref={cameraRef}>
+          <View style={styles.cameraUI}>
+            <TouchableOpacity style={styles.closeCamera} onPress={() => setIsCameraOpen(false)}>
+              <Text style={styles.closeCameraText}>✕</Text>
+            </TouchableOpacity>
+            <View style={styles.cameraGuides}>
+               <View style={styles.guideCornerTopLeft} />
+               <View style={styles.guideCornerTopRight} />
+               <View style={styles.guideCornerBottomLeft} />
+               <View style={styles.guideCornerBottomRight} />
+            </View>
+            <TouchableOpacity style={styles.shutterBtn} onPress={takePicture}>
+              <View style={styles.shutterInner} />
+            </TouchableOpacity>
+            <Text style={styles.cameraHint}>CENTER YOUR MEAL IN THE FRAME</Text>
+          </View>
+        </CameraView>
+      </Modal>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Text style={styles.backBtnText}>←</Text>
@@ -105,6 +189,11 @@ const CalorieTracker: React.FC<CalorieProps> = ({ logs, setLogs, waterLogs, setW
                 <MacroBar label="FATS" current={totalMacros.f} goal={goals.f} color="#666" />
               </View>
             </View>
+
+            <TouchableOpacity style={styles.scanBtn} onPress={handleScanPress}>
+               <Text style={styles.scanBtnEmoji}>📸</Text>
+               <Text style={styles.scanBtnText}>SCAN MEAL (AI)</Text>
+            </TouchableOpacity>
 
             <View style={styles.actionCard}>
               <Text style={styles.cardTitle}>MANUAL LOG</Text>
@@ -188,11 +277,14 @@ const styles = StyleSheet.create({
   macroValue: { color: '#000', fontSize: 8, fontWeight: '900' },
   progressBarBg: { height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden' },
   progressBarFill: { height: '100%' },
+  scanBtn: { backgroundColor: '#fff', borderRadius: 24, padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, shadowColor: '#fff', shadowOpacity: 0.2, shadowRadius: 10, elevation: 5 },
+  scanBtnEmoji: { fontSize: 24 },
+  scanBtnText: { color: '#000', fontWeight: '900', fontSize: 14, fontStyle: 'italic' },
   actionCard: { backgroundColor: '#111', padding: 24, borderRadius: 24, borderWidth: 1, borderColor: '#222' },
   cardTitle: { color: '#dc2626', fontSize: 10, fontWeight: '900', marginBottom: 16 },
   input: { backgroundColor: '#000', color: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 },
-  addBtn: { backgroundColor: '#fff', padding: 16, borderRadius: 12, alignItems: 'center' },
-  addBtnText: { color: '#000', fontWeight: '900', fontSize: 12 },
+  addBtn: { backgroundColor: '#222', padding: 16, borderRadius: 12, alignItems: 'center' },
+  addBtnText: { color: '#fff', fontWeight: '900', fontSize: 12 },
   historyItem: { backgroundColor: '#111', padding: 20, borderRadius: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   historyName: { color: '#fff', fontWeight: '900', fontSize: 14 },
   historyTime: { color: '#666', fontSize: 10, fontWeight: '700' },
@@ -204,7 +296,21 @@ const styles = StyleSheet.create({
   waterGrid: { flexDirection: 'row', gap: 10 },
   waterBtn: { flex: 1, backgroundColor: '#111', borderWidth: 1, borderColor: '#222', padding: 20, borderRadius: 16, alignItems: 'center' },
   waterBtnText: { color: '#fff', fontWeight: '900', fontSize: 10 },
-  historyInfo: { gap: 2 }
+  historyInfo: { gap: 2 },
+  camera: { flex: 1 },
+  cameraUI: { flex: 1, backgroundColor: 'transparent', justifyContent: 'space-between', padding: 40, alignItems: 'center' },
+  closeCamera: { alignSelf: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  closeCameraText: { color: '#fff', fontSize: 20, fontWeight: '900' },
+  cameraGuides: { width: 250, height: 250, position: 'relative' },
+  guideCornerTopLeft: { position: 'absolute', top: 0, left: 0, width: 40, height: 40, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#fff' },
+  guideCornerTopRight: { position: 'absolute', top: 0, right: 0, width: 40, height: 40, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#fff' },
+  guideCornerBottomLeft: { position: 'absolute', bottom: 0, left: 0, width: 40, height: 40, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#fff' },
+  guideCornerBottomRight: { position: 'absolute', bottom: 0, right: 0, width: 40, height: 40, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#fff' },
+  shutterBtn: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.3)', padding: 6 },
+  shutterInner: { flex: 1, backgroundColor: '#fff', borderRadius: 34 },
+  cameraHint: { color: '#fff', fontWeight: '900', fontSize: 10, letterSpacing: 2, textAlign: 'center' },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 999, justifyContent: 'center', alignItems: 'center', gap: 20 },
+  loadingText: { color: '#fff', fontWeight: '900', fontStyle: 'italic', letterSpacing: 2 }
 });
 
 export default CalorieTracker;

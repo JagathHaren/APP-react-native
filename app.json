@@ -6,23 +6,36 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "icon": "https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/icon.png",
+    "splash": {
+      "image": "https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.strongher",
+      "bundleIdentifier": "com.strongher.fitness",
       "infoPlist": {
         "NSCameraUsageDescription": "StrongHer needs camera access to scan food and log meals.",
         "NSMicrophoneUsageDescription": "StrongHer needs microphone access for trainer voice notes."
       }
     },
     "android": {
-      "package": "com.yourname.strongher",
+      "package": "com.strongher.fitness",
+      "versionCode": 1,
       "permissions": [
         "CAMERA",
-        "RECORD_AUDIO"
-      ]
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      }
     },
     "web": {
       "favicon": "https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/favicon.png"
